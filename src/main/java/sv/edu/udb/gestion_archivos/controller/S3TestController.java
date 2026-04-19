@@ -1,16 +1,21 @@
 package sv.edu.udb.gestion_archivos.controller;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.services.s3.S3Client;
+import sv.edu.udb.gestion_archivos.service.S3Service;
 
 @RestController
+@RequestMapping("/api/files")
 public class S3TestController {
 
     private final S3Client s3Client;
+    private final S3Service s3Service;
 
-    public S3TestController(S3Client s3Client) {
+    public S3TestController(S3Client s3Client, S3Service s3Service) {
         this.s3Client = s3Client;
+        this.s3Service = s3Service;
     }
 
     @GetMapping("/test-s3")
@@ -20,6 +25,16 @@ public class S3TestController {
             return "Conexión exitosa con S3 🚀";
         } catch (Exception e) {
             return "Error conectando a S3: " + e.getMessage();
+        }
+    }
+
+    @PostMapping("/upload")
+    public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file) {
+        try {
+            String fileName = s3Service.uploadFile(file);
+            return ResponseEntity.ok("Archivo subido: " + fileName);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error al subir archivo: " + e.getMessage());
         }
     }
 }
