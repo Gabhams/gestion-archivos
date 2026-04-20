@@ -17,7 +17,8 @@ public class S3TestController {
         this.s3Service = s3Service;
     }
 
-    @PostMapping("/subir")
+
+    @PostMapping(value = "/subir", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<String> subir(@RequestParam("file") MultipartFile file) {
         try {
             return ResponseEntity.ok(s3Service.uploadFile(file));
