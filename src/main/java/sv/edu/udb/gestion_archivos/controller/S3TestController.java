@@ -5,6 +5,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.services.s3.S3Client;
 import sv.edu.udb.gestion_archivos.service.S3Service;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 
 @RestController
 @RequestMapping("/api/files")
@@ -17,6 +20,7 @@ public class S3TestController {
         this.s3Client = s3Client;
         this.s3Service = s3Service;
     }
+
 
     @GetMapping("/test-s3")
     public String testConnection() {
@@ -37,4 +41,24 @@ public class S3TestController {
             return ResponseEntity.badRequest().body("Error al subir archivo: " + e.getMessage());
         }
     }
+
+
+    @GetMapping("/{fileName}")
+    public ResponseEntity<?> downloadFile(@PathVariable String fileName) {
+        try {
+            byte[] fileBytes = s3Service.downloadFile(fileName);
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .body(fileBytes);
+
+        } catch (NoSuchKeyException e) {
+            return ResponseEntity.status(404).body("Error: El archivo no existe en la nube.");
+
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error interno: " + e.getMessage());
+        }
+    }
+
 }
